@@ -38,7 +38,7 @@ int main()
         Vec4i l = lines[i];
         float dy = l[3] - l[1];
         float dx = l[2] - l[0];
-        float theta = cvFastArctan(dy, dx);
+        float theta = cvFastArctan(dy, dx); // angle between lines
         
         // make sure it's not too close to any previously drawn lines
         bool should_continue = false;
@@ -48,22 +48,9 @@ int main()
                 should_continue = true;
                 break;
             }
-            
-            if (d[0] < l[0] && d[2] < l[2]) {
-                
-                float x_proportion = (l[0] - d[0]) / (d[2] - d[0]);
-                float x1 = d[0] + x_proportion * (d[2] - d[0]);
-                float y1 = d[1] + x_proportion * (d[3] - d[1]);
-                
-                if (sqrt(pow(x1-l[0], 2) + pow(y1-l[1], 2)) < 10) {
-                    //should_continue = true;
-                }
-                
-            } else if (d[0] > l[0] && d[2] > l[2]) {
-                
-            }
         }
         
+        // make sure the line is over the pickguard
         if (l[0] > src.cols/8 || l[2] < src.cols/6) {
             should_continue = true;
         }
@@ -72,30 +59,24 @@ int main()
             continue;
         }
         
-        //theta *= 180/CV_PI;
-        //std::cout << theta << std::endl;
-        
+        // only allow lines between 0-15 degrees
         if (theta > 345 && theta < 360) {
-            //line( src, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
             drawn_lines.insert(drawn_lines.begin(), l);
             angles[drawn_lines.size() - 1] = theta;
-            //std::cout << theta << std::endl;
         }
     }
     std::cout << drawn_lines.size() << std::endl;
     
     float grads[drawn_lines.size()];
+    
     // Extend the lines to go right across the image
     for (int i = 0; i < drawn_lines.size(); i++) {
         Vec4i l = drawn_lines[i];
         float grad = ((float)(l[3] - l[1]))/((float)(l[2]-l[0]));
         grads[i] = grad;
-        //std::cout << l[0] << " " << l[1] << " " << l[2] << " " << l[3] << "    " << grad << std::endl;
         drawn_lines[i][0] = 0;
-        //drawn_lines[i][1] = l[1] - (grad * l[0] / (float)(l[2] - l[0]));
         drawn_lines[i][1] = l[1] - (grad * l[0]);
         drawn_lines[i][2] = src.cols;
-        //drawn_lines[i][3] = l[3] + (grad * (src.cols - l[2]) / (float)(l[2] - l[0]));
         drawn_lines[i][3] = l[3] + (grad * (src.cols - l[2]));
         
         l = drawn_lines[i];
